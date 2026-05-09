@@ -86,12 +86,13 @@
     }
     .primary { background: #0f172a; color: white; }
     .secondary { background: white; color: #0f172a; border: 1px solid #cbd5e1 !important; }
+
     .step-card {
       border: 1px solid #e2e8f0;
       background: #f8fafc;
       border-radius: 22px;
       padding: 20px;
-      margin-bottom: 16px;
+      margin-bottom: 40px;
     }
     .step-title {
       display: flex;
@@ -139,7 +140,11 @@
       font-family: inherit;
       background: white;
     }
-    .result-line { margin-top: 10px; font-size: 14px; }
+    .result-line {
+      margin-top: 14px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
     .diff-box {
       margin-top: 10px;
       background: white;
@@ -211,6 +216,32 @@
       text-align: center;
     }
     .mini-btn:hover { background: #f1f5f9; }
+    
+    #stepWrap {
+      display: flex;
+      flex-direction: column;
+      row-gap: 200px;
+    }
+
+    .step-card {
+      margin-bottom: 0 !important;
+    }
+
+    #stepWrap .step-card {
+      margin-bottom: 0 !important;
+      padding-bottom: 28px;
+    }
+
+    #stepWrap .result-line {
+      margin-top: 16px;
+      margin-bottom: 18px;
+    }
+
+    #stepWrap .diff-box {
+      margin-top: 14px;
+      margin-bottom: 12px;
+    }
+
     @media (max-width: 640px) {
       .container { padding: 16px 16px 72px; }
       .mini-row { padding: 0 16px; }
@@ -525,12 +556,42 @@
 
       area.classList.remove("hidden");
 
-      const steps = [
-        { level: 1, title: "1단계 · 그대로 따라쓰기", desc: "본문을 보면서 그대로 한 번 따라 써보세요.", promptType: "full" },
-        { level: 2, title: "2단계 · 각 단어 첫 음절 힌트", desc: "각 단어의 첫 음절만 보고 본문을 채워보세요.", promptType: "mask" },
-        { level: 3, title: "3단계 · 절반 힌트", desc: "일부 단어만 첫 음절을 보여줍니다. 기억을 더 끌어올려 보세요.", promptType: "mask" },
-        { level: 4, title: "4단계 · 거의 백지", desc: "첫 단어 첫 음절만 보고 최대한 외워서 써보세요.", promptType: "mask" }
-      ];
+const steps = [
+  {
+    level: 1,
+    title: "1단계 · 그대로 따라쓰기",
+    desc: "본문을 보면서 그대로 한 번 따라 써보세요.",
+    promptType: "full"
+  },
+
+  {
+    level: 2,
+    title: "2단계 · 각 단어 첫 음절 힌트",
+    desc: "각 단어의 첫 음절만 보고 본문을 채워보세요.",
+    promptType: "mask"
+  },
+
+  {
+    level: 3,
+    title: "3단계 · 절반 힌트",
+    desc: "일부 단어만 첫 음절을 보여줍니다.",
+    promptType: "mask"
+  },
+
+  {
+    level: 4,
+    title: "4단계 · 거의 백지",
+    desc: "첫 단어 첫 음절만 보고 최대한 외워보세요.",
+    promptType: "mask"
+  },
+
+  {
+    level: 5,
+    title: "5단계 · 완전 백지",
+    desc: "힌트 없이 처음부터 끝까지 암송해보세요.",
+    promptType: "blank"
+  }
+];
 
       area.innerHTML = `
         <div class="learn-header">
@@ -551,11 +612,41 @@
       steps.forEach(step => {
         const card = document.createElement("div");
         card.className = "step-card";
+        card.style.marginBottom = "52px";
 
-        const promptHtml = step.promptType === "full"
-          ? `<div class="full-text-box">${escapeHtml(selectedVerse.text)}</div>`
-          : `<div class="prompt-box">${escapeHtml(makePrompt(selectedVerse.text, step.level))}</div>`;
+        let promptHtml = "";
 
+if (step.promptType === "full") {
+
+  promptHtml =
+    `<div class="full-text-box">
+      ${escapeHtml(selectedVerse.text)}
+    </div>`;
+
+} else if (step.promptType === "blank") {
+
+  const firstChar =
+    Array.from(selectedVerse.text)
+      .find(ch => /[가-힣A-Za-z0-9]/.test(ch)) || "";
+
+  const underlineLength =
+    Math.max(
+      normalizeText(selectedVerse.text).length - 1,
+      20
+    );
+
+  promptHtml =
+    `<div class="prompt-box">
+      ${firstChar}${"_".repeat(underlineLength)}
+    </div>`;
+
+} else {
+
+  promptHtml =
+    `<div class="prompt-box">
+      ${escapeHtml(makePrompt(selectedVerse.text, step.level))}
+    </div>`;
+}
         card.innerHTML = `
           <div class="step-title">
             <div>
@@ -603,7 +694,7 @@
 
     function gradeAll() {
       let correct = 0;
-      [1,2,3,4].forEach(level => {
+      [1,2,3,4,5].forEach(level => {
         if (gradeStep(level)) correct++;
       });
 
